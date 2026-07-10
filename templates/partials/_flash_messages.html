@@ -1,0 +1,18 @@
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <section class="toast-stack" aria-label="Notifications" aria-live="polite" data-toast-stack>
+            {% for category, message in messages %}
+                {% set toast_type = category if category in ["success", "error", "warning", "info"] else "info" %}
+                <article class="toast-card toast-{{ toast_type }}" role="{{ 'alert' if toast_type == 'error' else 'status' }}" data-toast>
+                    <span class="toast-symbol" aria-hidden="true">{% if toast_type == "error" %}!{% elif toast_type == "success" %}&#10003;{% else %}i{% endif %}</span>
+                    <div class="toast-body">
+                        <strong class="toast-title">{{ "Error" if toast_type == "error" else "Success" if toast_type == "success" else "Notice" }}</strong>
+                        <p class="toast-text">{{ message }}</p>
+                    </div>
+                    <button class="toast-close" type="button" aria-label="Close notification" data-toast-close>&times;</button>
+                    <span class="toast-timer" aria-hidden="true"></span>
+                </article>
+            {% endfor %}
+        </section>
+    {% endif %}
+{% endwith %}

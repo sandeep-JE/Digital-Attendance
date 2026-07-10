@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% from "partials/_components.html" import page_header with context %}
+
+{% block title %}{{ "Edit User" if user else "Add User" }} | Facial Attendance{% endblock %}
+
+{% block content %}
+{% call page_header("User profile" if user else "New account", user["full_name"] if user else "Create a user account", "Configure identity, access role, account status, and secure recovery details.") %}
+    <a class="button button-secondary" href="{{ url_for('users') }}">Back to Users</a>
+{% endcall %}
+
+<section class="panel form-panel-narrow">
+    <div class="panel-header compact"><div><h2>Account details</h2><p>{{ "Leave password fields blank to keep the current password." if user else "All fields are required for a new account." }}</p></div></div>
+    <form method="post" class="form-grid form-grid-two">
+        <label class="field"><span>Username</span><input type="text" name="username" value="{{ user['username'] if user else '' }}" autocomplete="username" required></label>
+        <label class="field"><span>Full Name</span><input type="text" name="full_name" value="{{ user['full_name'] if user else '' }}" autocomplete="name" required></label>
+        <label class="field"><span>Role</span>{% set current_role = user['role'] if user else 'user' %}<select name="role"><option value="admin" {{ 'selected' if current_role == 'admin' else '' }}>Admin</option><option value="user" {{ 'selected' if current_role == 'user' else '' }}>User</option></select></label>
+        <label class="field"><span>Status</span>{% set current_status = user['status'] if user else 'active' %}<select name="status"><option value="active" {{ 'selected' if current_status == 'active' else '' }}>Active</option><option value="inactive" {{ 'selected' if current_status == 'inactive' else '' }}>Inactive</option></select></label>
+        <label class="field form-span-two"><span>Security Question</span><input type="text" name="security_question" value="{{ user['security_question'] if user else '' }}" required></label>
+        <label class="field form-span-two"><span>Security Answer <small>{{ "Leave blank to keep current" if user else "Required" }}</small></span><input type="text" name="security_answer" autocomplete="off" {{ '' if user else 'required' }}></label>
+        <label class="field"><span>Password <small>{{ "Optional" if user else "Required" }}</small></span><input type="password" name="password" autocomplete="new-password" {{ '' if user else 'required' }}></label>
+        <label class="field"><span>Confirm Password</span><input type="password" name="confirm_password" autocomplete="new-password" {{ '' if user else 'required' }}></label>
+        <div class="form-actions form-span-two"><button class="button button-primary" type="submit">{{ "Save User" if user else "Create User" }}</button></div>
+    </form>
+</section>
+{% endblock %}

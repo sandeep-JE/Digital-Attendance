@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% from "partials/_components.html" import page_header, empty_state with context %}
+{% from "partials/_icons.html" import icon with context %}
+
+{% block title %}Dashboard | Facial Attendance{% endblock %}
+
+{% block content %}
+{% call page_header(
+    "Daily overview",
+    "Good to see you, " ~ current_user["full_name"].split()[0] ~ ".",
+    "Monitor today's workforce activity, resolve exceptions, and keep attendance moving."
+) %}
+    <a class="button button-primary" href="{{ url_for('attendance') }}">
+        {{ icon("camera") }} Open Scanner
+    </a>
+    {% if is_admin %}
+    <a class="button button-secondary" href="{{ url_for('create_employee') }}">
+        {{ icon("plus") }} Register Employee
+    </a>
+    {% endif %}
+{% endcall %}
+
+<section class="stats-grid" aria-label="Attendance overview">
+    <article class="stat-card">
+        <span class="stat-icon stat-icon-teal">{{ icon("building") }}</span>
+        <div class="stat-copy"><span>Total Employees</span><strong>{{ stats.employees }}</strong><small>All workforce records</small></div>
+    </article>
+    <article class="stat-card">
+        <span class="stat-icon stat-icon-green">{{ icon("user-check") }}</span>
+        <div class="stat-copy"><span>Active Employees</span><strong>{{ stats.active_employees }}</strong><small>Eligible for attendance</small></div>
+    </article>
+    <article class="stat-card">
+        <span class="stat-icon stat-icon-blue">{{ icon("face") }}</span>
+        <div class="stat-copy"><span>Faces Registered</span><strong>{{ stats.registered_faces }}</strong><small>Ready for recognition</small></div>
+    </article>
+    <article class="stat-card">
+        <span class="stat-icon stat-icon-green">{{ icon("calendar-check") }}</span>
+        <div class="stat-copy"><span>Present Today</span><strong>{{ stats.today_present }}</strong><small>Eight hours or more</small></div>
+    </article>
+    <article class="stat-card">
+        <span class="stat-icon stat-icon-amber">{{ icon("clock") }}</span>
+        <div class="stat-copy"><span>Half-day Today</span><strong>{{ stats.today_halfday }}</strong><small>Four to eight hours</small></div>
+    </article>
+    <article class="stat-card">
+        <span class="stat-icon stat-icon-red">{{ icon("alert") }}</span>
+        <div class="stat-copy"><span>Pending Review</span><strong>{{ stats.today_pending }}</strong><small>Needs admin decision</small></div>
+    </article>
+</section>
+
+<div class="dashboard-grid">
+    <section class="panel dashboard-summary">
+        <div class="panel-header">
+            <div>
+                <p class="eyebrow">Today</p>
+                <h2>Attendance summary</h2>
+                <p>First and last recognition events determine the day's duration.</p>
+            </div>
+            <a class="text-link" href="{{ url_for('attendance') }}">View scanner {{ icon("arrow-right") }}</a>
+        </div>
+        {% if today_summaries %}
+        <div class="table-container">
+            <table>
+                <thead><tr><th>Name</th><th>First</th><th>Last</th><th>Duration</th><th>OT</th><th>Status</th></tr></thead>
+                <tbody>
+                    {% for row in today_summaries %}
+                    <tr>
+                        <td><strong class="table-primary">{{ row["full_name"] }}</strong></td>
+                        <td>{{ row["first_time"] }}</td><td>{{ row["last_time"] }}</td>
+                        <td>{{ row["duration_text"] }}</td><td>{{ row["ot_text"] }}</td>
+                        <td><span class="badge badge-{{ row['resolved_status'] }}">{{ row["resolved_status"]|replace('_', ' ') }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            {{ empty_state("No attendance yet", "Scans recorded today will appear here with duration and status.", "calendar-check") }}
+        {% endif %}
+    </section>
+
+    <section class="panel recent-activity">
+        <div class="panel-header">
+            <div>
+                <p class="eyebrow">Recent activity</p>
+                <h2>Latest records</h2>
+                <p>The ten most recent recognition events.</p>
+            </div>
+        </div>
+        {% if recent_attendance %}
+        <div class="activity-list">
+            {% for row in recent_attendance %}
+            <article class="activity-item">
+                <span class="activity-avatar" aria-hidden="true">{{ row["full_name"][0]|upper }}</span>
+                <div><strong>{{ row["full_name"] }}</strong><span>{{ row["employee_code"] }} &middot; {{ row["department"] }}</span></div>
+                <time datetime="{{ row['attended_at'] }}">{{ row["attended_at"].replace('T', ' ') }}</time>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+            {{ empty_state("No recent activity", "Recognized employee events will appear here as they happen.", "inbox") }}
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

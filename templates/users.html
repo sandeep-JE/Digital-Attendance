@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from "partials/_components.html" import page_header, empty_state with context %}
+{% from "partials/_icons.html" import icon with context %}
+
+{% block title %}User Management | Facial Attendance{% endblock %}
+
+{% block content %}
+{% call page_header("Access control", "User management", "Manage sign-in accounts, permission roles, access status, and password recovery details.") %}
+    <a class="button button-primary" href="{{ url_for('create_user') }}">{{ icon("plus") }} Add User</a>
+{% endcall %}
+
+<section class="panel">
+    <div class="panel-header compact"><div><h2>Software users</h2><p>{{ users|length }} account{{ '' if users|length == 1 else 's' }}</p></div></div>
+    {% if users %}
+    <div class="table-container">
+        <table>
+            <thead><tr><th>User</th><th>Username</th><th>Role</th><th>Status</th><th>Updated</th><th><span class="sr-only">Actions</span></th></tr></thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td><div class="identity-cell"><span class="activity-avatar" aria-hidden="true">{{ user["full_name"][0]|upper }}</span><strong>{{ user["full_name"] }}</strong></div></td>
+                    <td>@{{ user["username"] }}</td>
+                    <td><span class="badge badge-{{ user['role'] }}">{{ user["role"] }}</span></td>
+                    <td><span class="badge badge-{{ user['status'] }}">{{ user["status"] }}</span></td>
+                    <td><span class="date-cell">{{ user["updated_at"].replace('T', ' ') }}</span></td>
+                    <td>
+                        <div class="row-actions">
+                            <a class="button button-ghost button-small" href="{{ url_for('edit_user', user_id=user['id']) }}">Edit</a>
+                            <form method="post" action="{{ url_for('toggle_user_status', user_id=user['id']) }}"><button class="button button-secondary button-small" type="submit">{{ "Deactivate" if user["status"] == "active" else "Activate" }}</button></form>
+                            <form method="post" action="{{ url_for('delete_user', user_id=user['id']) }}" data-confirm="Delete the account for {{ user['full_name'] }}?"><button class="button button-danger button-small" type="submit">Delete</button></form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        {{ empty_state("No users found", "Create an account to grant secure application access.", "users") }}
+    {% endif %}
+</section>
+{% endblock %}

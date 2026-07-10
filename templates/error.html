@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% from "partials/_components.html" import page_header with context %}
+
+{% block title %}Application Error | Facial Attendance{% endblock %}
+
+{% block content %}
+{% call page_header("Application error", error_title|default("Something went wrong"), error_message|default("The request could not be completed. Please try again.")) %}
+    <a class="button button-secondary" href="{{ url_for('dashboard') if current_user else url_for('login') }}">{{ "Back to Dashboard" if current_user else "Back to Sign In" }}</a>
+{% endcall %}
+{% endblock %}

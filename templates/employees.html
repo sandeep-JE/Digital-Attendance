@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% from "partials/_components.html" import page_header, empty_state with context %}
+{% from "partials/_icons.html" import icon with context %}
+
+{% block title %}Employees | Facial Attendance{% endblock %}
+
+{% block content %}
+{% call page_header("Employee master", "Employees", "Create employee records, manage access status, and keep face registrations current.") %}
+    <a class="button button-primary" href="{{ url_for('create_employee') }}">{{ icon("plus") }} Add Employee</a>
+{% endcall %}
+
+<section class="panel">
+    <div class="panel-header compact">
+        <div><h2>Employee directory</h2><p>{{ employees|length }} workforce record{{ '' if employees|length == 1 else 's' }}</p></div>
+    </div>
+    {% if employees %}
+    <div class="table-container">
+        <table>
+            <thead><tr><th>Employee</th><th>Code</th><th>Department</th><th>Status</th><th>Face</th><th>Updated</th><th><span class="sr-only">Actions</span></th></tr></thead>
+            <tbody>
+                {% for employee in employees %}
+                <tr>
+                    <td><div class="identity-cell"><span class="activity-avatar" aria-hidden="true">{{ employee["full_name"][0]|upper }}</span><strong>{{ employee["full_name"] }}</strong></div></td>
+                    <td><span class="code-chip">{{ employee["employee_code"] }}</span></td>
+                    <td>{{ employee["department"] }}</td>
+                    <td><span class="badge badge-{{ employee['status'] }}">{{ employee["status"] }}</span></td>
+                    <td><span class="face-state {{ 'is-ready' if employee['face_image_path'] else 'is-missing' }}"><span aria-hidden="true"></span>{{ "Registered" if employee["face_image_path"] else "Missing" }}</span></td>
+                    <td><span class="date-cell">{{ employee["updated_at"].replace('T', ' ') }}</span></td>
+                    <td>
+                        <div class="row-actions">
+                            <a class="button button-ghost button-small" href="{{ url_for('edit_employee', employee_id=employee['id']) }}">Edit</a>
+                            <form method="post" action="{{ url_for('toggle_employee_status', employee_id=employee['id']) }}">
+                                <button class="button button-secondary button-small" type="submit">{{ "Deactivate" if employee["status"] == "active" else "Activate" }}</button>
+                            </form>
+                            <form method="post" action="{{ url_for('delete_employee', employee_id=employee['id']) }}" data-confirm="Delete {{ employee['full_name'] }} and all linked attendance records?">
+                                <button class="button button-danger button-small" type="submit">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        {{ empty_state("No employees found", "Add the first employee, then register a face to begin attendance recognition.", "employees") }}
+    {% endif %}
+</section>
+{% endblock %}

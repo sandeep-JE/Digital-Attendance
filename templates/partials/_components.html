@@ -1,0 +1,24 @@
+{% from "partials/_icons.html" import icon with context %}
+
+{% macro page_header(kicker, title, description) -%}
+<header class="page-header">
+    <div class="page-header-copy">
+        <p class="eyebrow">{{ kicker }}</p>
+        <h1>{{ title }}</h1>
+        {% if description %}<p>{{ description }}</p>{% endif %}
+    </div>
+    {% if caller %}
+        <div class="page-actions">{{ caller() }}</div>
+    {% endif %}
+</header>
+{%- endmacro %}
+
+{% macro empty_state(title, description, icon_name="inbox") -%}
+<div class="empty-state">
+    <span class="empty-state-icon">{{ icon(icon_name) }}</span>
+    <div>
+        <h3>{{ title }}</h3>
+        <p>{{ description }}</p>
+    </div>
+</div>
+{%- endmacro %}

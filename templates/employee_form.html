@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% from "partials/_components.html" import page_header, empty_state with context %}
+{% from "partials/_icons.html" import icon with context %}
+
+{% block title %}{{ "Edit Employee" if employee else "Add Employee" }} | Facial Attendance{% endblock %}
+
+{% block content %}
+{% call page_header(
+    "Employee profile" if employee else "New employee",
+    employee["full_name"] if employee else "Create an employee",
+    "Maintain accurate workforce details and capture one clear face for reliable recognition."
+) %}
+    <a class="button button-secondary" href="{{ url_for('employees') }}">Back to Employees</a>
+{% endcall %}
+
+{% if not employee %}
+<ol class="registration-steps" aria-label="Employee registration progress">
+    <li class="is-active"><span>1</span><div><strong>Employee details</strong><small>Enter and save the required information</small></div></li>
+    <li><span>2</span><div><strong>Face capture</strong><small>Open the camera and register one face</small></div></li>
+</ol>
+{% elif request.args.get("setup") == "face" %}
+<ol class="registration-steps" aria-label="Employee registration progress">
+    <li class="is-complete"><span>&#10003;</span><div><strong>Employee details</strong><small>Information saved successfully</small></div></li>
+    <li class="is-active"><span>2</span><div><strong>Face capture</strong><small>Start the camera to finish registration</small></div></li>
+</ol>
+{% endif %}
+
+<div class="form-layout">
+    <section class="panel">
+        <div class="panel-header compact"><div><h2>{{ "Employee details" if employee else "Basic information" }}</h2><p>Fields marked required must be completed.</p></div></div>
+        <form method="post" class="form-grid form-grid-two">
+            <label class="field"><span>Employee Code</span><input type="text" name="employee_code" value="{{ employee['employee_code'] if employee else request.form.get('employee_code', '') }}" autocomplete="off" required></label>
+            <label class="field"><span>Full Name</span><input type="text" name="full_name" value="{{ employee['full_name'] if employee else request.form.get('full_name', '') }}" autocomplete="name" required></label>
+            <label class="field"><span>Department</span><input type="text" name="department" value="{{ employee['department'] if employee else request.form.get('department', '') }}" required></label>
+            <label class="field"><span>Status</span>
+                {% set current_status = employee['status'] if employee else request.form.get('status', 'active') %}
+                <select name="status"><option value="active" {{ 'selected' if current_status == 'active' else '' }}>Active</option><option value="inactive" {{ 'selected' if current_status == 'inactive' else '' }}>Inactive</option></select>
+            </label>
+            <div class="form-actions form-span-two"><button class="button button-primary" type="submit">{{ "Save Changes" if employee else "Save & Continue to Face" }}</button></div>
+        </form>
+    </section>
+
+    <section class="panel face-panel" id="face-registration">
+        <div class="panel-header compact"><div><h2>Face registration</h2><p>Use a clear, front-facing image with one person in frame.</p></div>{% if employee and employee["face_image_path"] %}<span class="badge badge-active">Registered</span>{% endif %}</div>
+        {% if employee %}
+        <div class="camera-card" data-camera data-endpoint="{{ url_for('register_face', employee_id=employee['id']) }}">
+            <div class="video-frame"><video autoplay playsinline aria-label="Face registration camera preview"></video><div class="face-guide" aria-hidden="true"></div></div>
+            <canvas hidden></canvas>
+            <div class="camera-actions"><button class="button button-secondary" type="button" data-camera-start>{{ icon("camera") }} Start Camera</button><button class="button button-primary" type="button" data-camera-capture>{{ icon("face") }} Capture Face</button></div>
+            <p class="camera-message" role="status" aria-live="polite" data-camera-message>{{ "Face registered. Capture again to replace it." if employee["face_image_path"] else "Camera is idle. Start it when you are ready." }}</p>
+        </div>
+        {% if employee["face_image_path"] %}
+        <div class="registered-preview"><img src="{{ url_for('face_image', filename=employee['face_image_path'].split('/')[-1]) }}" alt="Registered face for {{ employee['full_name'] }}"><div><strong>Current reference</strong><span>Capture a new image to replace it.</span></div></div>
+        {% endif %}
+        {% else %}
+            {{ empty_state("Face capture is step 2", "Complete the employee details and select Save & Continue to Face. The camera controls will appear here next.", "face") }}
+        {% endif %}
+    </section>
+</div>
+
+{% if employee %}
+<section class="panel">
+    <div class="panel-header"><div><p class="eyebrow">Attendance history</p><h2>Recent daily records</h2><p>The latest 15 calculated attendance days for this employee.</p></div></div>
+    {% if attendance_rows %}
+    <div class="table-container"><table><thead><tr><th>Date</th><th>First</th><th>Last</th><th>Duration</th><th>OT</th><th>Status</th></tr></thead><tbody>
+        {% for row in attendance_rows %}<tr><td>{{ row["attended_on"] }}</td><td>{{ row["first_time"] }}</td><td>{{ row["last_time"] }}</td><td>{{ row["duration_text"] }}</td><td>{{ row["ot_text"] }}</td><td><span class="badge badge-{{ row['resolved_status'] }}">{{ row["resolved_status"]|replace('_', ' ') }}</span>{% if row["review_needed"] %}<span class="cell-note">Admin decision required</span>{% endif %}</td></tr>{% endfor %}
+    </tbody></table></div>
+    {% else %}{{ empty_state("No attendance history", "This employee's completed attendance days will appear here.", "calendar-check") }}{% endif %}
+</section>
+{% endif %}
+{% endblock %}

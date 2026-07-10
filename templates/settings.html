@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% from "partials/_components.html" import page_header with context %}
+{% from "partials/_icons.html" import icon with context %}
+
+{% block title %}Settings | Facial Attendance{% endblock %}
+
+{% block content %}
+{% call page_header("System configuration", "Attendance settings", "Control recognition frequency while keeping the application's duration and overtime rules visible.") %}
+    <a class="button button-secondary" href="{{ url_for('attendance') }}">{{ icon("scan") }} Open Scanner</a>
+{% endcall %}
+
+<div class="settings-layout">
+    <section class="panel">
+        <div class="panel-header compact"><div><p class="eyebrow">Recognition</p><h2>Face scan cooldown</h2><p>Prevent duplicate recognition events within a short time window.</p></div></div>
+        <form method="post" class="form-grid settings-form">
+            <label class="field"><span>Cooldown in seconds</span><input type="number" min="0" step="1" name="cooldown_seconds" value="{{ settings['cooldown_seconds'] }}" inputmode="numeric" required><small>Current duration: {{ settings["cooldown_text"] }}</small></label>
+            <div class="form-actions"><button class="button button-primary" type="submit">Save Settings</button></div>
+        </form>
+    </section>
+    <aside class="panel rules-panel">
+        <div class="panel-header compact"><div><p class="eyebrow">Current policy</p><h2>Daily calculation rules</h2></div></div>
+        <ul class="rule-list">
+            <li><span class="rule-icon rule-green">{{ icon("calendar-check") }}</span><div><strong>Present</strong><p>Eight hours or more between first and last scan.</p></div></li>
+            <li><span class="rule-icon rule-amber">{{ icon("clock") }}</span><div><strong>Half-day</strong><p>At least four hours but less than eight hours.</p></div></li>
+            <li><span class="rule-icon rule-red">{{ icon("alert") }}</span><div><strong>Admin review</strong><p>Less than four hours requires a final decision.</p></div></li>
+            <li><span class="rule-icon rule-blue">{{ icon("clock") }}</span><div><strong>Overtime</strong><p>Time beyond eight hours is counted as OT.</p></div></li>
+        </ul>
+    </aside>
+</div>
+{% endblock %}

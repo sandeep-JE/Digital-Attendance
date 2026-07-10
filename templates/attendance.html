@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% from "partials/_components.html" import page_header, empty_state with context %}
+{% from "partials/_icons.html" import icon with context %}
+
+{% block title %}Attendance Scanner | Facial Attendance{% endblock %}
+
+{% block content %}
+{% call page_header(
+    "Live recognition",
+    "Attendance scanner",
+    "Keep the connected camera running for continuous recognition. Only active employees with registered faces can be matched."
+) %}
+    {% if is_admin %}
+    <a class="button button-secondary" href="{{ url_for('employees') }}">{{ icon("employees") }} Manage Employees</a>
+    <a class="button button-ghost" href="{{ url_for('settings') }}">{{ icon("settings") }} Cooldown Settings</a>
+    {% endif %}
+{% endcall %}
+
+<div class="scanner-layout">
+    <section class="panel scanner-panel">
+        <div class="panel-header compact">
+            <div>
+                <div class="live-label"><span aria-hidden="true"></span> Camera station</div>
+                <h2>Recognition feed</h2>
+            </div>
+            <span class="cooldown-chip">Cooldown: {{ settings["cooldown_text"] }}</span>
+        </div>
+        <div class="camera-card" data-camera data-auto-scan="true" data-scan-interval-ms="4000" data-endpoint="{{ url_for('scan_attendance') }}">
+            <div class="video-frame">
+                <video autoplay playsinline aria-label="Live camera preview"></video>
+                <div class="face-guide" aria-hidden="true"></div>
+            </div>
+            <canvas hidden></canvas>
+            <div class="camera-actions">
+                <button class="button button-secondary" type="button" data-camera-start>{{ icon("camera") }} Start Camera</button>
+                <button class="button button-primary" type="button" data-camera-capture>{{ icon("scan") }} Scan Face</button>
+                <button class="button button-ghost" type="button" data-camera-auto>Start Monitoring</button>
+            </div>
+            <p class="camera-message" role="status" aria-live="polite" data-camera-message>Camera is idle. Start monitoring to scan continuously.</p>
+        </div>
+    </section>
+
+    <aside class="panel recognition-panel">
+        <div class="panel-header compact">
+            <div><p class="eyebrow">Recognition pool</p><h2>Ready employees</h2></div>
+            <span class="count-chip">{{ employees|length }}</span>
+        </div>
+        {% if employees %}
+        <ul class="employee-list">
+            {% for employee in employees %}
+            <li>
+                <span class="activity-avatar" aria-hidden="true">{{ employee["full_name"][0]|upper }}</span>
+                <div><strong>{{ employee["full_name"] }}</strong><span>{{ employee["employee_code"] }} &middot; {{ employee["department"] }}</span></div>
+                <span class="ready-indicator"><span aria-hidden="true"></span> Ready</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+            {{ empty_state("No faces ready", "Register an active employee face before starting recognition.", "face") }}
+        {% endif %}
+    </aside>
+</div>
+
+<section class="panel">
+    <div class="panel-header">
+        <div><p class="eyebrow">Today</p><h2>Attendance summary</h2><p>Duration uses the first and last scan recorded today.</p></div>
+    </div>
+    {% if today_summary %}
+    <div class="table-container">
+        <table>
+            <thead><tr><th>Name</th><th>Code</th><th>First</th><th>Last</th><th>Duration</th><th>OT</th><th>Status</th></tr></thead>
+            <tbody>
+                {% for row in today_summary %}
+                <tr>
+                    <td><strong class="table-primary">{{ row["full_name"] }}</strong></td><td>{{ row["employee_code"] }}</td>
+                    <td>{{ row["first_time"] }}</td><td>{{ row["last_time"] }}</td><td>{{ row["duration_text"] }}</td><td>{{ row["ot_text"] }}</td>
+                    <td>
+                        <span class="badge badge-{{ row['resolved_status'] }}">{{ row["resolved_status"]|replace('_', ' ') }}</span>
+                        {% if row["review_needed"] %}<span class="cell-note">Admin decision required</span>{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        {{ empty_state("No scans recorded", "Today's recognized attendance will be summarized here.", "calendar-check") }}
+    {% endif %}
+</section>
+{% endblock %}

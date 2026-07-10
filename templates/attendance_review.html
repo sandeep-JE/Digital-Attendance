@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "partials/_components.html" import page_header, empty_state with context %}
+{% from "partials/_icons.html" import icon with context %}
+
+{% block title %}Final Decisions | Facial Attendance{% endblock %}
+
+{% block content %}
+{% call page_header("Admin review", "Final attendance decisions", "Review days below four hours or without a complete working duration, then save the final status.") %}
+    <a class="button button-secondary" href="{{ url_for('attendance') }}">{{ icon("scan") }} Open Scanner</a>
+{% endcall %}
+
+<section class="filter-bar" aria-label="Review filters">
+    <form method="get" class="filter-form">
+        <label class="field"><span>Review Date</span><input type="date" name="date" value="{{ selected_date }}" required></label>
+        <button class="button button-secondary" type="submit">Load Review</button>
+    </form>
+    <div class="filter-result"><span class="count-chip">{{ review_rows|length }}</span><span>item{{ '' if review_rows|length == 1 else 's' }} awaiting decision</span></div>
+</section>
+
+<section class="review-stack" aria-label="Attendance decisions">
+    {% if review_rows %}
+        {% for row in review_rows %}
+        <article class="review-card">
+            <div class="review-card-header">
+                <div class="identity-cell"><span class="activity-avatar" aria-hidden="true">{{ row["full_name"][0]|upper }}</span><div><h2>{{ row["full_name"] }}</h2><p>{{ row["employee_code"] }} &middot; {{ row["department"] }}</p></div></div>
+                <span class="badge badge-review">Needs review</span>
+            </div>
+            <dl class="review-metrics">
+                <div><dt>First scan</dt><dd>{{ row["first_time"] }}</dd></div><div><dt>Last scan</dt><dd>{{ row["last_time"] }}</dd></div><div><dt>Duration</dt><dd>{{ row["duration_text"] }}</dd></div><div><dt>Overtime</dt><dd>{{ row["ot_text"] }}</dd></div>
+            </dl>
+            <form method="post" action="{{ url_for('save_attendance_review') }}" class="review-form">
+                <input type="hidden" name="employee_id" value="{{ row['employee_id'] }}"><input type="hidden" name="attended_on" value="{{ row['attended_on'] }}">
+                <label class="field"><span>Final Status</span><select name="final_status">{% set resolved = row["resolved_status"] if row["resolved_status"] != 'pending' else 'absent' %}<option value="present" {{ 'selected' if resolved == 'present' else '' }}>Present</option><option value="halfday" {{ 'selected' if resolved == 'halfday' else '' }}>Half-day</option><option value="absent" {{ 'selected' if resolved == 'absent' or row["resolved_status"] == 'pending' else '' }}>Absent</option></select></label>
+                <label class="field review-notes"><span>Decision Notes</span><input type="text" name="notes" value="{{ row['decision_notes'] }}" placeholder="Optional reason or context"></label>
+                <button class="button button-primary" type="submit">Save Decision</button>
+            </form>
+        </article>
+        {% endfor %}
+    {% else %}
+    <div class="panel">{{ empty_state("Review queue is clear", "No attendance rows require an admin decision for this date.", "calendar-check") }}</div>
+    {% endif %}
+</section>
+{% endblock %}

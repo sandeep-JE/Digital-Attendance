@@ -1,0 +1,45 @@
+{% from "partials/_icons.html" import icon with context %}
+<header class="topbar">
+    <div class="topbar-leading">
+        <button class="icon-button sidebar-toggle" type="button" aria-controls="app-sidebar" aria-expanded="true" aria-label="Toggle navigation" data-sidebar-toggle>
+            {{ icon("menu") }}
+        </button>
+        <div class="topbar-title">
+            <nav class="breadcrumbs" aria-label="Breadcrumb">
+                <a href="{{ url_for('dashboard') }}">Home</a>
+                {% if page_meta["title"] != "Dashboard" %}
+                    {{ icon("chevron", "breadcrumb-separator") }}
+                    <span aria-current="page">{{ page_meta["title"] }}</span>
+                {% endif %}
+            </nav>
+            <p>{{ page_meta["title"] }}</p>
+        </div>
+    </div>
+
+    <div class="topbar-actions">
+        <a class="quick-scan" href="{{ url_for('attendance') }}">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span>Scanner</span>
+        </a>
+        <div class="user-menu" data-user-menu>
+            <button class="user-menu-toggle" type="button" aria-expanded="false" aria-haspopup="menu" data-user-menu-toggle>
+                <span class="user-avatar" aria-hidden="true">{{ current_user["full_name"][0]|upper }}</span>
+                <span class="user-menu-copy">
+                    <strong>{{ current_user["full_name"] }}</strong>
+                    <small>{{ current_user["role"]|capitalize }}</small>
+                </span>
+                {{ icon("chevron", "user-menu-chevron") }}
+            </button>
+            <div class="user-dropdown" role="menu" hidden data-user-dropdown>
+                <div class="user-dropdown-header">
+                    <strong>{{ current_user["full_name"] }}</strong>
+                    <span>@{{ current_user["username"] }}</span>
+                </div>
+                {% if is_admin %}
+                    <a href="{{ url_for('settings') }}" role="menuitem">{{ icon("settings") }} Settings</a>
+                {% endif %}
+                <a href="{{ url_for('logout') }}" role="menuitem">{{ icon("logout") }} Log out</a>
+            </div>
+        </div>
+    </div>
+</header>
