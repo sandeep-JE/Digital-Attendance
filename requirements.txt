@@ -1,0 +1,10 @@
+# Python 3.12 virtual environments do not include setuptools by default,
+# and face_recognition_models still imports pkg_resources at runtime.
+setuptools==80.10.2
+numpy==1.26.4
+opencv-python==4.10.0.84
+openpyxl==3.1.5
+Flask==3.1.1
+Pillow==12.3.0
+./vendor/dlib_shim
+face-recognition==1.3.0
